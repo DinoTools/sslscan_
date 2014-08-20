@@ -123,6 +123,7 @@ struct sslCheckOptions
     int pout;
     int sslbugs;
     int http;
+    int delay;
     int verbose;
 
     // File Handles...
@@ -270,6 +271,10 @@ int tcpConnect(struct sslCheckOptions *options)
     int tlsStarted = 0;
     char buffer[BUFFERSIZE];
     int status;
+
+    // Delay for buggy / slow systems
+    if (options->delay)
+        sleep(1);
 
     // Create Socket
     socketDescriptor = socket(AF_INET, SOCK_STREAM, 0);
@@ -1849,6 +1854,7 @@ int main(int argc, char *argv[])
 
     options.sslVersion = ssl_all;
     options.pout = false;
+    options.delay = false;
     SSL_library_init();
 
     // Get program parameters
@@ -1868,6 +1874,10 @@ int main(int argc, char *argv[])
         // Show only supported
         else if (strcmp("--no-failed", argv[argLoop]) == 0)
             options.noFailed = true;
+
+        // delay between connect + don't exit for failed connection
+        else if (strcmp("--delay", argv[argLoop]) == 0)
+            options.delay = true;
 
         // Version
         else if (strcmp("--version", argv[argLoop]) == 0)
@@ -2031,6 +2041,7 @@ int main(int argc, char *argv[])
             printf("                       ports (i.e. host:port).\n");
             printf("  %s--no-failed%s          List only accepted ciphers  (default\n", COL_GREEN, RESET);
             printf("                       is to listing all ciphers).\n");
+            printf("  %s--delay                Delay 1s between connections.\n",COL_GREEN,RESET);
             printf("  %s--ssl2%s               Only check SSLv2 ciphers.\n", COL_GREEN, RESET);
             printf("  %s--ssl3%s               Only check SSLv3 ciphers.\n", COL_GREEN, RESET);
             printf("  %s--tls1%s               Only check TLSv1 ciphers.\n", COL_GREEN, RESET);
